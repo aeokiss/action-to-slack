@@ -133,6 +133,7 @@ export const execPullRequestMention = async (
   const changed_files = payload.pull_request?.changed_files as number;
   const commits = payload.pull_request?.commits as number;
   const merged = payload.pull_request?.merged as boolean;
+  const pull_request_number = payload.pull_request?.number as number;
   // fixed for mobile app
   const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
 
@@ -150,7 +151,7 @@ export const execPullRequestMention = async (
       configurationPath,
       context
     );
-    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${pr_info}\n${slackBody}`;
+    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}`;
   }
   else if (action == "assigned" || action == "unassigned") {
     const targetGithubId = payload.assignee?.login as string;
@@ -162,7 +163,7 @@ export const execPullRequestMention = async (
       context
     );
     const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
-    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
+    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${slackBody}`;
   }
   else if (action == "closed") {
     if (merged == true) { // the pull request was merged.
@@ -172,14 +173,14 @@ export const execPullRequestMention = async (
       pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
       pr_info += ", ";
       pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
-      message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}>*:\n${pr_info}`;
+      message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}`;
     }
     else { // the pull request was closed with unmerged commits.
-      message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits <${url}|${title}>*`;
+      message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits <${url}|${title}> #${pull_request_number}*`;
     }
   }
   else {
-    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*`;
+    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*`;
   }
 
   console.log(message);

@@ -1582,7 +1582,7 @@ exports.markdownToSlackBody = async (markdown, githubClient, repoToken, configur
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     const { repoToken, configurationPath } = allInputs;
     const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     console.log(pullRequestGithubUsername);
@@ -1600,6 +1600,7 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const changed_files = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.changed_files;
     const commits = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.commits;
     const merged = (_h = payload.pull_request) === null || _h === void 0 ? void 0 : _h.merged;
+    const pull_request_number = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j.number;
     // fixed for mobile app
     const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
@@ -1610,30 +1611,30 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
         pr_info += ", ";
         pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
         const slackBody = await exports.markdownToSlackBody(body, githubClient, repoToken, configurationPath, context);
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${pr_info}\n${slackBody}`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}`;
     }
     else if (action == "assigned" || action == "unassigned") {
-        const targetGithubId = (_j = payload.assignee) === null || _j === void 0 ? void 0 : _j.login;
+        const targetGithubId = (_k = payload.assignee) === null || _k === void 0 ? void 0 : _k.login;
         const slackIds = await exports.convertToSlackUsername([targetGithubId], githubClient, repoToken, configurationPath, context);
         const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${slackBody}`;
     }
     else if (action == "closed") {
         if (merged == true) { // the pull request was merged.
-            const pr_from = (_l = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k.head) === null || _l === void 0 ? void 0 : _l.ref;
-            const pr_into = (_o = (_m = payload.pull_request) === null || _m === void 0 ? void 0 : _m.base) === null || _o === void 0 ? void 0 : _o.ref;
+            const pr_from = (_m = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l.head) === null || _m === void 0 ? void 0 : _m.ref;
+            const pr_into = (_p = (_o = payload.pull_request) === null || _o === void 0 ? void 0 : _o.base) === null || _p === void 0 ? void 0 : _p.ref;
             var pr_info = ">";
             pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
             pr_info += ", ";
             pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
-            message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}>*:\n${pr_info}`;
+            message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}`;
         }
         else { // the pull request was closed with unmerged commits.
-            message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits <${url}|${title}>*`;
+            message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits <${url}|${title}> #${pull_request_number}*`;
         }
     }
     else {
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*`;
     }
     console.log(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
