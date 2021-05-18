@@ -1582,7 +1582,7 @@ exports.markdownToSlackBody = async (markdown, githubClient, repoToken, configur
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     const { repoToken, configurationPath } = allInputs;
     const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     console.log(pullRequestGithubUsername);
@@ -1597,16 +1597,22 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
     const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
     const pull_request_body = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.body;
+    const changed_files = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.changed_files;
+    const commits = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.commits;
     // fixed for mobile app
     const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
     if (action === "opened" || action === "edited") {
         const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
+        var pr_info = ">";
+        pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
+        pr_info += ", ";
+        pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
         const slackBody = await exports.markdownToSlackBody(body, githubClient, repoToken, configurationPath, context);
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${pr_info}\n${slackBody}`;
     }
     else if (action == "assigned" || action == "unassigned") {
-        const targetGithubId = (_f = payload.assignee) === null || _f === void 0 ? void 0 : _f.login;
+        const targetGithubId = (_h = payload.assignee) === null || _h === void 0 ? void 0 : _h.login;
         const slackIds = await exports.convertToSlackUsername([targetGithubId], githubClient, repoToken, configurationPath, context);
         const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
         message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
