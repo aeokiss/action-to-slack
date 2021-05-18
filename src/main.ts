@@ -135,8 +135,9 @@ export const execPullRequestMention = async (
 
   var message = "";
   if (action === "opened" || action === "edited") {
+    const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
     const slackBody = await markdownToSlackBody(
-      pull_request_body,
+      body,
       githubClient,
       repoToken,
       configurationPath,

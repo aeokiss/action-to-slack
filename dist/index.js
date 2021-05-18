@@ -1601,7 +1601,8 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
     if (action === "opened" || action === "edited") {
-        const slackBody = await exports.markdownToSlackBody(pull_request_body, githubClient, repoToken, configurationPath, context);
+        const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
+        const slackBody = await exports.markdownToSlackBody(body, githubClient, repoToken, configurationPath, context);
         message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
     }
     else if (action == "assigned" || action == "unassigned") {
