@@ -130,12 +130,18 @@ export const execPullRequestMention = async (
   const title = payload.pull_request?.title;
   const url = payload.pull_request?.html_url;
   const pull_request_body = payload.pull_request?.body as string;
+  const changed_files = payload.pull_request?.changed_files as number;
+  const commits = payload.pull_request?.commits as number;
   // fixed for mobile app
   const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
 
   var message = "";
   if (action === "opened" || action === "edited") {
     const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
+    var pr_info = ">";
+    pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
+    pr_info += ", ";
+    pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
     const slackBody = await markdownToSlackBody(
       body,
       githubClient,
@@ -143,7 +149,7 @@ export const execPullRequestMention = async (
       configurationPath,
       context
     );
-    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${slackBody}`;
+    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}>*:\n${pr_info}\n${slackBody}`;
   }
   else if (action == "assigned" || action == "unassigned") {
     const targetGithubId = payload.assignee?.login as string;
