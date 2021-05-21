@@ -1560,6 +1560,7 @@ exports.markdownToSlackBody = async (markdown, githubClient, repoToken, configur
         ["**", ""],
         ["* ", "● "],
         ["- [ ] ", "- □ "],
+        ["- [x] ", "- ☑ "],
         //    ["_", ""], // italic
         ["*", ""],
         ["> ", "| "] // blockquote
