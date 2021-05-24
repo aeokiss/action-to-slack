@@ -140,6 +140,8 @@ export const execPullRequestMention = async (
 
   var message = "";
   if (action === "opened" || action === "edited") {
+    const pr_from = payload.pull_request?.head?.ref as string;
+    const pr_into = payload.pull_request?.base?.ref as string;
     const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
     var pr_info = ">";
     pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
@@ -152,7 +154,7 @@ export const execPullRequestMention = async (
       configurationPath,
       context
     );
-    message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}`;
+    message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}`;
   }
   else if (action == "assigned" || action == "unassigned") {
     const targetGithubId = payload.assignee?.login as string;
