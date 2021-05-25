@@ -1583,7 +1583,7 @@ exports.markdownToSlackBody = async (markdown, githubClient, repoToken, configur
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     const { repoToken, configurationPath } = allInputs;
     const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     console.log(pullRequestGithubUsername);
@@ -1602,42 +1602,40 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const commits = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.commits;
     const merged = (_h = payload.pull_request) === null || _h === void 0 ? void 0 : _h.merged;
     const pull_request_number = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j.number;
+    const pr_from = (_l = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k.head) === null || _l === void 0 ? void 0 : _l.ref;
+    const pr_into = (_o = (_m = payload.pull_request) === null || _m === void 0 ? void 0 : _m.base) === null || _o === void 0 ? void 0 : _o.ref;
     // fixed for mobile app
     const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
     if (action === "opened" || action === "edited") {
-        const pr_from = (_l = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k.head) === null || _l === void 0 ? void 0 : _l.ref;
-        const pr_into = (_o = (_m = payload.pull_request) === null || _m === void 0 ? void 0 : _m.base) === null || _o === void 0 ? void 0 : _o.ref;
         const body = (pull_request_body.length > 0) ? pull_request_body : "No description provided.";
         var pr_info = ">";
         pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
         pr_info += ", ";
         pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
         const slackBody = await exports.markdownToSlackBody(body, githubClient, repoToken, configurationPath, context);
-        message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}\n${url}`;
     }
     else if (action == "assigned" || action == "unassigned") {
         const targetGithubId = (_p = payload.assignee) === null || _p === void 0 ? void 0 : _p.login;
         const slackIds = await exports.convertToSlackUsername([targetGithubId], githubClient, repoToken, configurationPath, context);
         const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*\n${slackBody}`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${slackBody}\n${url}`;
     }
     else if (action == "closed") {
         if (merged == true) { // the pull request was merged.
-            const pr_from = (_r = (_q = payload.pull_request) === null || _q === void 0 ? void 0 : _q.head) === null || _r === void 0 ? void 0 : _r.ref;
-            const pr_into = (_t = (_s = payload.pull_request) === null || _s === void 0 ? void 0 : _s.base) === null || _t === void 0 ? void 0 : _t.ref;
             var pr_info = ">";
             pr_info += ((changed_files > 1) ? "Changed files" : "Changed file") + " : " + changed_files.toString();
             pr_info += ", ";
             pr_info += ((commits > 1) ? "Commits" : "Commit") + " : " + commits.toString();
-            message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}`;
+            message = `*${prSlackUserId} has merged PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${url}`;
         }
         else { // the pull request was closed with unmerged commits.
-            message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits <${url}|${title}> #${pull_request_number}*`;
+            message = `*${prSlackUserId} has ${action} PULL REQUEST with unmerged commits into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${url}`;
         }
     }
     else {
-        message = `*${prSlackUserId} has ${action} PULL REQUEST <${url}|${title}> #${pull_request_number}*`;
+        message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${url}`;
     }
     console.log(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
@@ -1683,7 +1681,7 @@ exports.execPrReviewRequestedCommentMention = async (payload, allInputs, githubC
         core.warning(line);
         comment_as_quote += (">" + line);
     });
-    const message = `*${commentSlackUserId} has ${action} a COMMENT on a ${pr_state} PULL REQUEST ${pullRequestedSlackUserId} ${pr_title}*:\n${comment_as_quote}\n${comment_url}`;
+    const message = `*${commentSlackUserId} has ${action} a COMMENT on a ${pr_state} PULL REQUEST, which created by ${pullRequestedSlackUserId} <${comment_url}|${pr_title}>*\n${comment_as_quote}\n${comment_url}`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
@@ -1708,7 +1706,7 @@ exports.execPrReviewRequestedMention = async (payload, allInputs, githubClient, 
     const url = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.html_url;
     const requestedSlackUserId = (slackIds[0] == requestedGithubUsername) ? "@" + requestedGithubUsername : "<@" + slackIds[0] + ">";
     const requestSlackUserId = (slackIds[1] == requestUsername) ? "@" + requestUsername : "<@" + slackIds[1] + ">";
-    const message = `*${requestedSlackUserId} has been REQUESTED to REVIEW <${url}|${title}> by ${requestSlackUserId}*`;
+    const message = `*${requestedSlackUserId} has been REQUESTED to REVIEW <${url}|${title}> by ${requestSlackUserId}*\n${url}`;
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
 };
@@ -1779,7 +1777,7 @@ exports.execPullRequestReviewComment = async (payload, allInputs, githubClient, 
 };
 // Issue metion
 exports.execIssueMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     const { repoToken, configurationPath } = allInputs;
     //  const issueGithubUsername = payload.issue?.user?.login as string;
     const issueGithubUsername = (_a = payload.sender) === null || _a === void 0 ? void 0 : _a.login;
@@ -1794,21 +1792,22 @@ exports.execIssueMention = async (payload, allInputs, githubClient, slackClient,
     const issue_title = (_b = payload.issue) === null || _b === void 0 ? void 0 : _b.title;
     // const issue_state = payload.issue?.state as string;
     const issue_body = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.body;
-    const issue_url = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.html_url;
+    const issue_number = (_d = payload.issue) === null || _d === void 0 ? void 0 : _d.number;
+    const issue_url = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.html_url;
     const issueSlackUserId = (slackIds[0] == issueGithubUsername) ? "@" + issueGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
     if (action === "opened" || action === "edited") {
         const slackBody = await exports.markdownToSlackBody(issue_body, githubClient, repoToken, configurationPath, context);
-        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}>*:\n${slackBody}`;
+        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}> #${issue_number}*\n${slackBody}\n${issue_url}`;
     }
     else if (action == "assigned" || action == "unassigned") {
-        const targetGithubId = (_e = payload.assignee) === null || _e === void 0 ? void 0 : _e.login;
+        const targetGithubId = (_f = payload.assignee) === null || _f === void 0 ? void 0 : _f.login;
         const slackIds = await exports.convertToSlackUsername([targetGithubId], githubClient, repoToken, configurationPath, context);
         const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
-        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}>*:\n${slackBody}`;
+        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}>* #${issue_number}\n${slackBody}\n${issue_url}`;
     }
     else {
-        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}>*`;
+        message = `*${issueSlackUserId} has ${action} an ISSUE <${issue_url}|${issue_title}>* #${issue_number}\n${issue_url}`;
     }
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
@@ -1816,7 +1815,7 @@ exports.execIssueMention = async (payload, allInputs, githubClient, slackClient,
 };
 // Issue comment mentions
 exports.execIssueCommentMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const { repoToken, configurationPath } = allInputs;
     const commentGithubUsername = (_b = (_a = payload.comment) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     const issueGithubUsername = (_d = (_c = payload.issue) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login;
@@ -1833,9 +1832,11 @@ exports.execIssueCommentMention = async (payload, allInputs, githubClient, slack
     const action = payload.action;
     const issue_title = (_e = payload.issue) === null || _e === void 0 ? void 0 : _e.title;
     const issue_state = (_f = payload.issue) === null || _f === void 0 ? void 0 : _f.state;
+    const issue_url = (_g = payload.issue) === null || _g === void 0 ? void 0 : _g.html_url;
+    const issue_number = (_h = payload.issue) === null || _h === void 0 ? void 0 : _h.number;
     //  const comment_body = payload.comment?.body as string;
-    var comment_body = (_g = payload.comment) === null || _g === void 0 ? void 0 : _g.body;
-    const comment_url = (_h = payload.comment) === null || _h === void 0 ? void 0 : _h.html_url;
+    var comment_body = (_j = payload.comment) === null || _j === void 0 ? void 0 : _j.body;
+    const comment_url = (_k = payload.comment) === null || _k === void 0 ? void 0 : _k.html_url;
     const commentSlackUserId = (slackIds[0] == commentGithubUsername) ? "@" + commentGithubUsername : "<@" + slackIds[0] + ">";
     const issueSlackUserId = (slackIds[1] == issueGithubUsername) ? "@" + issueGithubUsername : "<@" + slackIds[1] + ">";
     // to slackID on comment
@@ -1854,7 +1855,7 @@ exports.execIssueCommentMention = async (payload, allInputs, githubClient, slack
         core.warning(line);
         comment_as_quote += (">" + line);
     });
-    const message = `*${commentSlackUserId} has ${action} a COMMENT on a ${issue_state} ISSUE ${issueSlackUserId} ${issue_title}*:\n${comment_as_quote}\n${comment_url}`;
+    const message = `*${commentSlackUserId} has ${action} a COMMENT on a ${issue_state} ISSUE <${issue_url}|${issue_title}> #${issue_number}, which created by ${issueSlackUserId}*\n${comment_as_quote}\n${comment_url}`;
     core.warning(message);
     const { slackWebhookUrl, iconUrl, botName } = allInputs;
     await slackClient.postToSlack(slackWebhookUrl, message, { iconUrl, botName });
