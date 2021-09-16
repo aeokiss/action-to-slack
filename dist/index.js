@@ -1694,7 +1694,7 @@ exports.markdownToSlackBody = async (markdown, githubClient, repoToken, configur
 };
 // Pull Request
 exports.execPullRequestMention = async (payload, allInputs, githubClient, slackClient, context) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
     const { repoToken, configurationPath } = allInputs;
     const pullRequestGithubUsername = (_b = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.login;
     console.log(pullRequestGithubUsername);
@@ -1708,13 +1708,14 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
     const action = payload.action;
     const title = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.title;
     const url = (_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.html_url;
-    const pull_request_body = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.body;
-    const changed_files = (_f = payload.pull_request) === null || _f === void 0 ? void 0 : _f.changed_files;
-    const commits = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.commits;
-    const merged = (_h = payload.pull_request) === null || _h === void 0 ? void 0 : _h.merged;
-    const pull_request_number = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j.number;
-    const pr_from = (_l = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k.head) === null || _l === void 0 ? void 0 : _l.ref;
-    const pr_into = (_o = (_m = payload.pull_request) === null || _m === void 0 ? void 0 : _m.base) === null || _o === void 0 ? void 0 : _o.ref;
+    //  const pull_request_body = payload.pull_request?.body as string;
+    const pull_request_body = (_f = (_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.body) !== null && _f !== void 0 ? _f : "";
+    const changed_files = (_g = payload.pull_request) === null || _g === void 0 ? void 0 : _g.changed_files;
+    const commits = (_h = payload.pull_request) === null || _h === void 0 ? void 0 : _h.commits;
+    const merged = (_j = payload.pull_request) === null || _j === void 0 ? void 0 : _j.merged;
+    const pull_request_number = (_k = payload.pull_request) === null || _k === void 0 ? void 0 : _k.number;
+    const pr_from = (_m = (_l = payload.pull_request) === null || _l === void 0 ? void 0 : _l.head) === null || _m === void 0 ? void 0 : _m.ref;
+    const pr_into = (_p = (_o = payload.pull_request) === null || _o === void 0 ? void 0 : _o.base) === null || _p === void 0 ? void 0 : _p.ref;
     // fixed for mobile app
     const prSlackUserId = (slackIds[0] == pullRequestGithubUsername) ? "@" + pullRequestGithubUsername : "<@" + slackIds[0] + ">";
     var message = "";
@@ -1728,7 +1729,7 @@ exports.execPullRequestMention = async (payload, allInputs, githubClient, slackC
         message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${pr_info}\n${slackBody}\n${url}`;
     }
     else if (action == "assigned" || action == "unassigned") {
-        const targetGithubId = (_p = payload.assignee) === null || _p === void 0 ? void 0 : _p.login;
+        const targetGithubId = (_q = payload.assignee) === null || _q === void 0 ? void 0 : _q.login;
         const slackIds = await exports.convertToSlackUsername([targetGithubId], githubClient, repoToken, configurationPath, context);
         const slackBody = ">" + ((action == "assigned") ? "Added" : "Removed") + " : " + ((targetGithubId == slackIds[0]) ? "@" + targetGithubId : "<@" + slackIds[0] + ">");
         message = `*${prSlackUserId} has ${action} PULL REQUEST into \`${pr_into}\` from \`${pr_from}\` <${url}|${title}> #${pull_request_number}*\n${slackBody}\n${url}`;
